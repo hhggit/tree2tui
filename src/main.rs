@@ -90,6 +90,8 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
     for (line_idx, line) in buf.lines().enumerate() {
         let line = &line?;
 
+        let line = &console::strip_ansi_codes(line);
+
         if nodes.is_empty() {
             nodes.insert(ROOT, arena.new_node(line.to_string()));
             continue;
