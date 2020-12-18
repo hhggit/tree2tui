@@ -47,6 +47,26 @@ fn main() -> Result<()> {
             if i.node.children(&i.arena).next().is_some() {
                 tree.insert_container_item(i, Placement::LastChild, row);
             } else {
+                static ENABLE_CARGO: Lazy<bool> =
+                    Lazy::new(|| std::env::args().any(|s| s == "-c" || s == "--cargo"));
+
+                if *ENABLE_CARGO {
+                    i.as_str()
+                        .strip_suffix(" (*)")
+                        .and_then(|d| i.arena.iter().find(|n| n.get() == d))
+                        .and_then(|n| i.arena.get_node_id(n))
+                        .and_then(|node| {
+                            tree.insert_container_item(
+                                TreeEntry {
+                                    node,
+                                    arena: i.arena.clone(),
+                                },
+                                Placement::LastChild,
+                                row,
+                            )
+                        });
+                }
+
                 tree.insert_item(i, Placement::LastChild, row);
             }
         }
