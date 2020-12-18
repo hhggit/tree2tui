@@ -10,3 +10,4 @@ $ cargo tree | tree2tui
 // --cargo|-c    enalbe folding/expanding duplicate nodes of "cargo tree"
 $ cargo tree | tree2tui --cargo
 ```
+![cargo tree](https://github.com/hhggit/tree2tui/blob/assets/screenshot-cargo_tree.jpg?raw=true)
