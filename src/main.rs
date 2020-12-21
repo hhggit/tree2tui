@@ -36,9 +36,6 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
                 .get(&n.node_pos)
                 .ok_or_else(|| anyhow::anyhow!("parse error at line {}:{}", line_idx, line))?
                 .append(current, &mut arena);
-            if n.is_last {
-                nodes.remove(&n.node_pos);
-            }
         }
     }
 
@@ -53,7 +50,6 @@ struct NodeInfo<'t> {
     node_pos: usize,
     data_pos: usize,
     data: &'t str,
-    is_last: bool,
 }
 
 fn chars_count(line: &str, idx: usize) -> usize {
@@ -68,6 +64,5 @@ fn parse_node(line: &str) -> Option<NodeInfo> {
         data: &line[node.end()..],
         node_pos: chars_count(line, node.start()),
         data_pos: chars_count(line, node.end()),
-        is_last: node.as_str().starts_with('└'),
     })
 }
