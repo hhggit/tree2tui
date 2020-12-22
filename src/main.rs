@@ -112,19 +112,20 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
 
         let line = &console::strip_ansi_codes(line);
 
-        if nodes.is_empty() {
-            nodes.insert(ROOT, arena.new_node(line.to_string()));
-            continue;
-        }
         if let Some(n) = parse_node(line) {
-            let current = arena.new_node(n.data.into());
+            if nodes.is_empty() {
+                nodes.insert(ROOT, arena.new_node("".into()));
+            }
 
+            let current = arena.new_node(n.data.into());
             nodes.insert(n.data_pos, current);
 
             nodes
                 .get(&n.node_pos)
                 .ok_or_else(|| anyhow::anyhow!("parse error at line {}:{}", line_idx, line))?
                 .append(current, &mut arena);
+        } else if nodes.is_empty() {
+            nodes.insert(ROOT, arena.new_node(line.to_string()));
         }
     }
 
