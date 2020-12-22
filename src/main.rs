@@ -26,6 +26,10 @@ struct Opt {
     /// group selected from regex as tree's node
     #[clap(short, long, default_value = "1")]
     node: usize,
+
+    /// group selected from regex as tree's data, if not set using all data after node
+    #[clap(short, long)]
+    data: Option<usize>,
 }
 
 static OPT: Lazy<Opt> = Lazy::new(Opt::parse);
@@ -167,9 +171,16 @@ fn parse_node(line: &str) -> Option<NodeInfo> {
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(&OPT.regex).unwrap());
     let cap = RE.captures(line)?;
     let node = cap.get(OPT.node)?;
+
+    let (data, pos) = OPT
+        .data
+        .and_then(|d| cap.get(d))
+        .map(|d| (d.as_str(), d.start()))
+        .unwrap_or_else(|| (&line[node.end()..], node.end()));
+
     Some(NodeInfo {
-        data: &line[node.end()..],
+        data,
         node_pos: chars_count(line, node.start()),
-        data_pos: chars_count(line, node.end()),
+        data_pos: chars_count(line, pos),
     })
 }
