@@ -6,13 +6,33 @@ use std::{
 };
 
 use anyhow::Result;
+use clap::Clap;
 use cursive::{traits::*, views::Dialog, Cursive};
 use cursive_tree_view::{Placement, TreeView};
 use indextree::{Arena, NodeId};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
+#[derive(Debug, Clap)]
+struct Opt {
+    /// enable folding/expanding duplicate nodes of "cargo tree"
+    #[clap(short, long)]
+    cargo: bool,
+
+    /// regex to capture the tree's node
+    #[clap(short, long, default_value = r"[│\s]*([├└]─*\s*)")]
+    regex: String,
+
+    /// group selected from regex as tree's node
+    #[clap(short, long, default_value = "1")]
+    node: usize,
+}
+
+static OPT: Lazy<Opt> = Lazy::new(Opt::parse);
+
 fn main() -> Result<()> {
+    Lazy::force(&OPT);
+
     let (arena, root) = parse_tree(BufReader::new(stdin()))?;
 
     #[derive(Debug)]
@@ -47,10 +67,7 @@ fn main() -> Result<()> {
             if i.node.children(&i.arena).next().is_some() {
                 tree.insert_container_item(i, Placement::LastChild, row);
             } else {
-                static ENABLE_CARGO: Lazy<bool> =
-                    Lazy::new(|| std::env::args().any(|s| s == "-c" || s == "--cargo"));
-
-                if *ENABLE_CARGO {
+                if OPT.cargo {
                     i.as_str()
                         .strip_suffix(" (*)")
                         .and_then(|d| i.arena.iter().find(|n| n.get() == d))
@@ -147,9 +164,9 @@ fn chars_count(line: &str, idx: usize) -> usize {
 }
 
 fn parse_node(line: &str) -> Option<NodeInfo> {
-    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"[│\s]*([├└]─*\s*)").unwrap());
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(&OPT.regex).unwrap());
     let cap = RE.captures(line)?;
-    let node = cap.get(1)?;
+    let node = cap.get(OPT.node)?;
     Some(NodeInfo {
         data: &line[node.end()..],
         node_pos: chars_count(line, node.start()),
