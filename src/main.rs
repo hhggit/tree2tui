@@ -132,7 +132,8 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
     let mut arena: Arena<String> = Arena::new();
     let mut nodes = HashMap::new();
 
-    const ROOT: usize = 0;
+    let mut root = None;
+    let mut root_data: Option<String> = None;
 
     for (line_idx, line) in buf.lines().enumerate().skip(OPT.skip_lines) {
         let line = &line?;
@@ -140,26 +141,27 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
         let line = &console::strip_ansi_codes(line);
 
         if let Some(n) = parse_node(line) {
+            let current = arena.new_node(n.data.into());
+
             if nodes.is_empty() {
-                nodes.insert(ROOT, arena.new_node("".into()));
+                let r = arena.new_node(root_data.take().unwrap_or_else(|| "<...>".to_string()));
+                r.append(current, &mut arena);
+
+                nodes.insert(n.node_pos, r);
+                root = Some(r);
+            } else if let Some(p) = nodes.get(&n.node_pos) {
+                p.append(current, &mut arena);
+            } else {
+                anyhow::bail!("dangling node at line {}:{}", line_idx, line)
             }
 
-            let current = arena.new_node(n.data.into());
             nodes.insert(n.data_pos, current);
-
-            nodes
-                .get(&n.node_pos)
-                .ok_or_else(|| anyhow::anyhow!("parse error at line {}:{}", line_idx, line))?
-                .append(current, &mut arena);
         } else if !OPT.skip_head && nodes.is_empty() {
-            nodes.insert(ROOT, arena.new_node(line.to_string()));
+            root_data = Some(line.trim().to_string());
         }
     }
 
-    Ok((
-        arena,
-        *nodes.get(&ROOT).ok_or_else(|| anyhow::anyhow!("NO ROOT"))?,
-    ))
+    Ok((arena, root.ok_or_else(|| anyhow::anyhow!("empty tree"))?))
 }
 
 #[derive(Debug)]
