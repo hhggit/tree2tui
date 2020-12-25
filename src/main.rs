@@ -31,6 +31,9 @@ struct Opt {
     #[clap(short, long)]
     data: Option<usize>,
 
+    #[clap(short = 'h', long)]
+    skip_head: bool,
+
     #[clap(short = 's', long, default_value = "0")]
     skip_lines: usize,
 }
@@ -148,7 +151,7 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
                 .get(&n.node_pos)
                 .ok_or_else(|| anyhow::anyhow!("parse error at line {}:{}", line_idx, line))?
                 .append(current, &mut arena);
-        } else if nodes.is_empty() {
+        } else if !OPT.skip_head && nodes.is_empty() {
             nodes.insert(ROOT, arena.new_node(line.to_string()));
         }
     }
