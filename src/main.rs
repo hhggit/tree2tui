@@ -30,6 +30,9 @@ struct Opt {
     /// group selected from regex as tree's data, if not set using all data after node
     #[clap(short, long)]
     data: Option<usize>,
+
+    #[clap(short = 's', long, default_value = "0")]
+    skip_lines: usize,
 }
 
 static OPT: Lazy<Opt> = Lazy::new(Opt::parse);
@@ -128,7 +131,7 @@ pub fn parse_tree(buf: impl BufRead) -> Result<(Arena<String>, NodeId)> {
 
     const ROOT: usize = 0;
 
-    for (line_idx, line) in buf.lines().enumerate() {
+    for (line_idx, line) in buf.lines().enumerate().skip(OPT.skip_lines) {
         let line = &line?;
 
         let line = &console::strip_ansi_codes(line);
