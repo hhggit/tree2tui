@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Result;
 use clap::Clap;
-use cursive::{traits::*, views::Dialog, Cursive};
+use cursive::{event::Key, traits::*, views::Dialog, Cursive};
 use cursive_tree_view::{Placement, TreeView};
 use indextree::{Arena, NodeId};
 use once_cell::sync::Lazy;
@@ -112,16 +112,28 @@ fn main() -> Result<()> {
 
     expand_tree(&mut tree, 0);
 
+    const TREE_NAME: &str = "tree";
+
     tree.set_on_collapse(|siv: &mut Cursive, row, is_collapsed: bool, children| {
         if !is_collapsed && children == 0 {
-            siv.call_on_name("tree", move |tree: &mut TreeView<TreeEntry>| {
+            siv.call_on_name(TREE_NAME, |tree: &mut TreeView<TreeEntry>| {
                 expand_tree(tree, row);
             });
         }
     });
 
     let mut siv = Cursive::default();
-    siv.add_layer(Dialog::around(tree.with_name("tree")));
+    siv.add_layer(Dialog::around(tree.with_name(TREE_NAME)));
+
+    siv.add_global_callback('q', Cursive::quit);
+
+    siv.add_global_callback(Key::Left, |siv| {
+        siv.call_on_name(TREE_NAME, |tree: &mut TreeView<TreeEntry>| {
+            if let Some(parent) = tree.row().and_then(|row| tree.item_parent(row)) {
+                tree.set_selected_row(parent);
+            }
+        });
+    });
 
     siv.run();
 
