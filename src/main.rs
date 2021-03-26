@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Result;
 use clap::Clap;
-use cursive::{event::Key, traits::*, views::Dialog, Cursive};
+use cursive::{event::Key, traits::*, views::Dialog, Cursive, CursiveExt};
 use cursive_tree_view::{Placement, TreeView};
 use indextree::{Arena, NodeId};
 use once_cell::sync::Lazy;
