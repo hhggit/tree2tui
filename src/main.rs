@@ -14,6 +14,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 #[derive(Debug, Clap)]
+#[clap(name = "tree2tui", about, version)]
 struct Opt {
     /// enable folding/expanding duplicate nodes of "cargo tree"
     #[clap(short, long)]

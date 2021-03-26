@@ -1,6 +1,6 @@
 [package]
 name = "tree2tui"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["hhggit <zh.xz@outlook.com>"]
 edition = "2018"
 
