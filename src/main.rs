@@ -7,7 +7,12 @@ use std::{
 
 use anyhow::Result;
 use clap::Clap;
-use cursive::{event::Key, traits::*, views::Dialog, Cursive, CursiveExt};
+use cursive::{
+    event::Key,
+    traits::*,
+    views::{Dialog, ScrollView},
+    Cursive, CursiveExt,
+};
 use cursive_tree_view::{Placement, TreeView};
 use indextree::{Arena, NodeId};
 use once_cell::sync::Lazy;
@@ -124,7 +129,7 @@ fn main() -> Result<()> {
     });
 
     let mut siv = Cursive::default();
-    siv.add_layer(Dialog::around(tree.with_name(TREE_NAME)));
+    siv.add_layer(Dialog::around(ScrollView::new(tree.with_name(TREE_NAME))));
 
     siv.add_global_callback('q', Cursive::quit);
 
